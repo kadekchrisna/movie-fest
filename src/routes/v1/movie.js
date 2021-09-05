@@ -7,6 +7,9 @@ const MovieRepos = require('../../repository/v1/movie')
 
 const Movie = new MovieDelivery(new MovieUsecase(new MovieRepos(db)));
 
+r.get("/", Movie.GetMovieList);
+r.post("/", Movie.CreateMovie);
+r.put("/", Movie.UpdateMovie);
 r.get("/:id", Movie.GetMovieDetail);
 
 module.exports = r;

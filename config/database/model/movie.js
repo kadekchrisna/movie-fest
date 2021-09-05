@@ -1,7 +1,7 @@
 /* jshint indent: 2 */
 
 module.exports = function (sequelize, DataTypes) {
-  return sequelize.define(
+  const movie =  sequelize.define(
     "movie",
     {
       movie_id: {
@@ -17,16 +17,20 @@ module.exports = function (sequelize, DataTypes) {
         type: DataTypes.TEXT,
         allowNull: false,
       },
+      movie_file: {
+        type: DataTypes.TEXT,
+        allowNull: false,
+      },
       movie_duration: {
-        type: DataTypes.STRING(50),
+        type: DataTypes.INTEGER(100),
         allowNull: false,
       },
       movie_created_at: {
-        type: DataTypes.STRING(100),
+        type: DataTypes.DATE,
         allowNull: true,
       },
       movie_updated_at: {
-        type: DataTypes.STRING(100),
+        type: DataTypes.DATE,
         allowNull: true,
       },
     },
@@ -35,4 +39,13 @@ module.exports = function (sequelize, DataTypes) {
       timestamps: false,
     }
   );
+
+  movie.associate = function (models) {
+    movie.belongsToMany(models.artist, {
+      as: 'artists',
+      through: 'movie_artist',
+      foreignKey: 'movie_artist_movie_id'
+    });
+  };
+  return movie
 };
