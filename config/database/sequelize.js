@@ -2,8 +2,7 @@
 
 const path = require("path");
 const fs = require("fs");
-const { Sequelize } = require("sequelize");
-
+const Sequelize = require("sequelize");
 const db = {};
 const dir = path.join(__dirname, "/model");
 const basename = path.basename(__filename);

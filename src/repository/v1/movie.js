@@ -1,6 +1,4 @@
-const { filter, now } = require("lodash");
-const { Op } = require("sequelize");
-const artist = require("../../../config/database/model/artist");
+const { filter, now, isArray } = require("lodash");
 
 class MovieRepository {
 
@@ -27,6 +25,7 @@ class MovieRepository {
   async Select(params) {
     try {
       let where = {}
+      let include = []
       if (params.id > 0) {
         where = {
           ...where,
@@ -35,32 +34,101 @@ class MovieRepository {
       }
 
 
-      if (params.search != '') {
+      if (typeof params.search == "string" && params.search != '' ) {
+        const orSearch = []
+        orSearch.push(
+          {
+            movie_title: {
+              [this.db.Sequelize.Op.substring]: params.search
+            }
+          },{
+            movie_desc: {
+              [this.db.Sequelize.Op.substring]: params.search
+            }
+          }
+        )
+
+        if (typeof params.isWithGenre == "boolean" ) {
+          orSearch.push({
+            '$genres.genre_name$': {
+              [this.db.Sequelize.Op.substring]: params.search
+            }
+          })
+        }
+
+        if (typeof params.isWithArtist == "boolean" ) {
+          orSearch.push({
+            '$artists.artist_name$': {
+              [this.db.Sequelize.Op.substring]: params.search
+            }
+          })
+        }
+
+
         where = {
           ...where,
           ...{
-            [Op.or]: [
-              {
-                movie_title: {
-                  [Op.substring]: params.search
-                }
-              },{
-                movie_desc: {
-                  [Op.substring]: params.search
-                }
-              }
-            ]
+            [this.db.Sequelize.Op.or]: orSearch
           }
         }
       }
+
+      if (isArray(params.movieIDs) && params.movieIDs.length > 0 ) {
+        where = {
+          ...where,
+          ...{
+            movie_id: {
+              [this.db.Sequelize.Op.in]: params.movieIDs
+            }
+          }
+        }
+      }
+
+      if (typeof params.isWithArtist == "boolean") {
+        include.push(
+          {
+            model: this.db.artist,
+            as: "artists",
+            required: true,
+            through:{
+              attributes: [],
+            },
+          })
+      }
+
+      let order = [['movie_title', 'ASC']]
+      if (typeof params.isCustomOrder == "boolean") {
+        if (isArray(params.movieIDs) && params.movieIDs.length > 0 ) {
+          order = this.db.Sequelize.literal("FIELD(movie_id,"+params.movieIDs.join(',')+")")
+        }
+      }
+
+      if (typeof params.isWithGenre == "boolean") {
+        include.push(
+          {
+            model: this.db.genre,
+            as: "genres",
+            required: true,
+            through:{
+              attributes: [],
+            },
+          })
+      }
         
-      return this.db.movie.findAll({
-          offset: params.offset,
-          limit: params.limit,
-          where: where,
-      });
+      const query = {
+        where: where,
+        include: include,
+        order: order
+      }
+
+      if (typeof params.noLimit != "boolean") {
+        query.offset = params.offset
+        query.limit = params.limit
+      }
+
+      return this.db.movie.findAll(query);
     } catch (error) {
-        return error
+        throw error
     }
   }
   

@@ -43,8 +43,16 @@ module.exports = function (sequelize, DataTypes) {
   movie.associate = function (models) {
     movie.belongsToMany(models.artist, {
       as: 'artists',
-      through: 'movie_artist',
-      foreignKey: 'movie_artist_movie_id'
+      through: 'movieArtist',
+      foreignKey: 'movie_artist_movie_id',
+      otherKey: 'movie_artist_artist_id',
+    });
+
+    movie.belongsToMany(models.genre, {
+      as: 'genres',
+      through: 'movieGenre',
+      foreignKey: 'movie_genre_movie_id',
+      otherKey: 'movie_genre_genre_id',
     });
   };
   return movie

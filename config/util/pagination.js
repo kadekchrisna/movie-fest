@@ -1,15 +1,31 @@
 const util = {
     defaultPaginate: (baseFilter) => {
-        if (baseFilter.Limit <= 0) {
-            baseFilter.Limit = 10
+        if (baseFilter.limit <= 0) {
+            baseFilter.limit = 10
         }
 
-        if (baseFilter.Page > 0) {
-            baseFilter.offset = (baseFilter.Page - 1) * baseFilter.Limit
+        if (baseFilter.page <= 0) {
+            baseFilter.page = 1
+        }
+
+        if (baseFilter.page > 0) {
+            baseFilter.offset = (baseFilter.page - 1) * baseFilter.limit
         }
 
         return baseFilter
+    },
+    paginate: (param) => {
+        return {
+            meta: {
+                limit: param.limit,
+                page: param.page,
+            },
+            data: param.data,
+          }
     }
 };
-module.exports = util;
+
+module.exports = {
+    util,
+};
   
