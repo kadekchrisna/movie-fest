@@ -37,6 +37,14 @@ How to run the server
 npm run server
 ```
 
+## Running the tests
+
+How to run the automated tests
+
+```
+npm test
+```
+
 ## API Documentation
 
 [Movie FEST](https://www.getpostman.com/collections/14161754a78b39e5c633)
@@ -46,3 +54,4 @@ npm run server
 - [Express](https://expressjs.com/) - Node.js web framework
 - [NPM](https://www.npmjs.com/) - Dependency Management
 - [Sequelize](https://sequelize.org/master/index.html) - ORM
+- [Jest](https://jestjs.io/) - Javascript Testing Framework
