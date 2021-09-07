@@ -8,7 +8,6 @@ class StorageRepository {
         try {
             return this.storage.upload.GenerateUploadSignedUrl({
                 duration: params.duration,
-                bucketName: params.bucketName,
                 fileName: params.fileName
             })
         } catch (error) {

@@ -7,7 +7,7 @@ const Routes = require("./src/routes/routes");
 const AdditionalDelivery = require("./src/delivery/v1/additional");
 
 const app = express();
-const port = process.env.PORT || 3000;
+const port = process.env.SERVER_PORT || 3000;
 
 const AdditionalHandler = new AdditionalDelivery();
 

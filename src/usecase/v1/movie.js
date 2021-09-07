@@ -212,13 +212,13 @@ class MovieUsecase {
     try {
       const url = await this.storageRepo.generateUploadSignedUrl({
         duration: 5*60,
-        bucketName: 'universal-development-bucket',
+        bucketName: process.env.BUCKET_NAME,
         fileName: 'movie/'+params.file_name 
       })
 
       return {
         upload_url: url,
-        file_url: 'https://storage.cloud.google.com/universal-development-bucket/movie/' + params.file_name
+        file_url: 'https://storage.cloud.google.com/'+process.env.BUCKET_NAME+'/movie/' + params.file_name
       }
     } catch (e) {
       console.log(e);

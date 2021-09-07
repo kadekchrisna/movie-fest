@@ -14,7 +14,7 @@ const upload = {
       
         // Get a v4 signed URL for uploading file
         const [url] = await storage
-          .bucket(params.bucketName)
+          .bucket(process.env.BUCKET_NAME)
           .file(params.fileName)
           .getSignedUrl(options);
       
