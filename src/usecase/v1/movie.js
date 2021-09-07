@@ -4,9 +4,11 @@ class MovieUsecase {
   constructor(
     movieRepo,
     movieViewsRepo,
+    storageRepo,
     ) {
     this.movieRepo = movieRepo;
     this.movieViewsRepo = movieViewsRepo;
+    this.storageRepo = storageRepo;
   }
     
   async ViewMovieDetail(id) {
@@ -39,7 +41,30 @@ class MovieUsecase {
     
   async CreateMovie(params) {
     try {
-      return this.movieRepo.Create(params)
+      const data = {
+        movie: {
+          movie_title:params.title,
+          movie_desc:params.desc,
+          movie_file:params.file,
+          movie_duration:params.duration,
+        },
+        genre: [],
+        artist: [],
+      }
+
+      params.genre.forEach(genre => {
+        data.genre.push({
+          genre_name: genre
+        })
+      });
+
+      params.artist.forEach(artist => {
+        data.artist.push({
+          artist_name: artist
+        })
+      });
+
+      return this.movieRepo.Create(data)
     } catch (e) {
       console.log(e);
       throw e;
@@ -48,7 +73,60 @@ class MovieUsecase {
     
   async UpdateMovie(params) {
     try {
-      return this.movieRepo.Update(params)
+      const movies = await this.movieRepo.Select({
+        noLimit: true,
+        isWithGenre: true,
+        isWithArtist: true,
+        id: params.movie_id,
+      })
+
+      if (movies.length == 0) {
+        throw Error("movie not found")
+      }
+      const movie = movies[0]
+      const updateGenre = []
+      const updateArtist = []
+      movie.genres.forEach(existingGenre => {
+        params.genres.forEach(updatedGenre => {
+          if (updatedGenre.genre_id == existingGenre.genre_id) {
+            updateGenre.push(
+              {
+                genre_id: updatedGenre.genre_id,
+                genre_name: updatedGenre.genre_name,
+              }
+            )
+          }
+        })
+      });
+
+      movie.artists.forEach(existingArtist => {
+        params.artists.forEach(updatedArtist => {
+          if (updatedArtist.artist_id == existingArtist.artist_id) {
+            updateArtist.push(
+              {
+                artist_id: updatedArtist.artist_id,
+                artist_name: updatedArtist.artist_name,
+              }
+            )
+          }
+        })
+      });
+
+
+      const data = {
+        movie: {
+          movie_title:params.movie_title,
+          movie_desc:params.movie_desc,
+          movie_file:params.movie_file,
+          movie_duration:params.movie_duration,
+          movie_id: movie.movie_id
+        },
+        genres: updateGenre,
+        artists: updateArtist
+      }
+
+      
+      return this.movieRepo.Update(data)
     } catch (e) {
       console.log(e);
       throw e;
@@ -110,7 +188,7 @@ class MovieUsecase {
   async ViewWatchedMovie(params) {
     try {
       const watchedMovies = await this.movieViewsRepo.Select({
-        accountID: +params.accountID,
+        accountID: +params.account_id,
       })
 
       let watchedMovieIDs = []
@@ -124,6 +202,24 @@ class MovieUsecase {
       })
 
       return  movies
+    } catch (e) {
+      console.log(e);
+      throw e;
+    }
+  }
+    
+  async GenerateUploadSignedUrl(params) {
+    try {
+      const url = await this.storageRepo.generateUploadSignedUrl({
+        duration: 5*60,
+        bucketName: 'universal-development-bucket',
+        fileName: 'movie/'+params.file_name 
+      })
+
+      return {
+        upload_url: url,
+        file_url: 'https://storage.cloud.google.com/universal-development-bucket/movie/' + params.file_name
+      }
     } catch (e) {
       console.log(e);
       throw e;

@@ -10,7 +10,7 @@ class MovieRepository {
   async Get(params) {
     try {
       const where = {}
-      if (params.id > 0) {
+      if (typeof params.id == "number" && params.id > 0) {
         where.movie_id = params.id
       }
         
@@ -18,7 +18,7 @@ class MovieRepository {
           where: where,
       });
     } catch (error) {
-        return error
+      throw error
     }
   }
 
@@ -26,7 +26,7 @@ class MovieRepository {
     try {
       let where = {}
       let include = []
-      if (params.id > 0) {
+      if (typeof params.id == "number" && params.id > 0) {
         where = {
           ...where,
           ...{movie_id :params.id}
@@ -133,23 +133,80 @@ class MovieRepository {
   }
   
   async Create(params) {
+    const t = await this.db.sequelize.transaction()
     try {
       params.movie_created_at = now()
-      return this.db.movie.create(params);
+      const movie = await this.db.movie.create(params.movie, {
+        transaction: t,
+        returning: true,
+      })
+
+      const genres = await this.db.genre.bulkCreate(params.genre, {
+        transaction: t,
+        returning: true,
+      });
+      const artists = await this.db.artist.bulkCreate(params.artist, {
+        transaction: t,
+        returning: true,
+      });
+      
+      const movieGenres = []
+      genres.forEach(genre => {
+        movieGenres.push({
+          movie_genre_movie_id: movie.movie_id,
+          movie_genre_genre_id: genre.genre_id
+        })
+      })
+      
+      const movieArtist = []
+      artists.forEach(artist => {
+        movieArtist.push({
+          movie_artist_movie_id: movie.movie_id,
+          movie_artist_artist_id: artist.artist_id
+        })
+      })
+
+      await Promise.all([
+        this.db.movieGenre.bulkCreate(movieGenres, {transaction: t}),
+        this.db.movieArtist.bulkCreate(movieArtist, {transaction: t})
+      ])
+
+      await t.commit()
+      return null
     } catch (error) {
-        return error
+        await t.rollback()
+        throw error
     } 
   }
   
   async Update(params) {
+    const t = await this.db.sequelize.transaction()
     try {
-      return this.db.movie.update(params,{
+      params.movie.movie_updated_at = now()
+      await this.db.movie.update(params.movie, {
         where: {
-          movie_id: params.movie_id
-        }
-      });
+          movie_id: params.movie.movie_id
+        },
+        transaction: t,
+      })
+
+      await Promise.all([
+        this.db.genre.bulkCreate(params.genres, {
+          transaction: t, 
+          updateOnDuplicate: ["genre_name"], 
+        }),
+        this.db.artist.bulkCreate(params.artists, {
+          transaction: t,
+          updateOnDuplicate: ["artist_name"],
+        })
+      ])
+
+      await t.commit()
+      return null
     } catch (error) {
-        return error
+      await t.rollback()
+      console.log(error);
+      throw error
     } 
   }
 }

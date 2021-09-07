@@ -41,8 +41,8 @@ class MovieDelivery {
 
   UpdateMovie = async (req, res) => {
     try {
-      await this.movieUsecase.UpdateMovie(req.body);
-      return res.status(200).json(response.success(200, "Successfully updated", null));
+      const movie = await this.movieUsecase.UpdateMovie(req.body);
+      return res.status(200).json(response.success(200, "Successfully updated", movie));
     } catch (error) {
       return res.status(400).json(response.failed(400, "Failed to updated movie"));
     }
@@ -63,6 +63,15 @@ class MovieDelivery {
       return res.status(200).json(response.success(200, "Success", movies));
     } catch (error) {
       return res.status(400).json(response.failed(400, "Failed to retrieve movie"));
+    }
+  }
+
+  GenerateUploadSignedUrl = async (req, res) => {
+    try {
+      const url = await this.movieUsecase.GenerateUploadSignedUrl(req.body);
+      return res.status(200).json(response.success(200, "Success", url));
+    } catch (error) {
+      return res.status(400).json(response.failed(400, "Failed to generate signed url"));
     }
   }
 }
